@@ -1,0 +1,1500 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CiteFree: Free & Aesthetic Citation Generator</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#eef2ff',
+                            100: '#e0e7ff',
+                            500: '#6366f1',
+                            600: '#4f46e5',
+                            700: '#4338ca',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom smooth scrolling & Siri/Apple Intelligence inspired Aesthetics */
+        html {
+            scroll-behavior: smooth;
+        }
+
+        /* True Black OLED & Dark Theme Base Styles */
+        html.dark body {
+            background-color: #09090b !important;
+            color: #f4f4f5 !important;
+        }
+
+        html.trueblack body {
+            background-color: #000000 !important;
+            color: #f4f4f5 !important;
+        }
+
+        /* Card Container Styles */
+        .card-siri {
+            border-radius: 20px;
+            background: #ffffff;
+            border: 1px solid rgba(226, 232, 240, 0.8);
+            transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 0.3s ease, border-color 0.3s ease, background-color 0.3s ease;
+        }
+        html.dark .card-siri {
+            background: #18181b;
+            border-color: #27272a;
+        }
+        html.trueblack .card-siri {
+            background: #0d0d0d;
+            border-color: #222222;
+        }
+
+        /* Rubber Band / Elastic Stretch Hover & Active Effects */
+        .elastic-stretch {
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
+        }
+        .elastic-stretch:hover {
+            transform: scale(1.02) translateY(-1px);
+        }
+        .elastic-stretch:active {
+            transform: scale(0.96) translateY(1px);
+        }
+
+        /* Realistic Liquid Glass Effect with Highlight Refractions */
+        .liquid-glass {
+            position: relative;
+            background: rgba(255, 255, 255, 0.65);
+            backdrop-filter: blur(20px) saturate(190%);
+            -webkit-backdrop-filter: blur(20px) saturate(190%);
+            border: 1px solid rgba(255, 255, 255, 0.7);
+            box-shadow: 
+                0 8px 32px 0 rgba(0, 0, 0, 0.06),
+                inset 0 1px 1px 0 rgba(255, 255, 255, 0.9),
+                inset 0 -1px 2px 0 rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+        }
+        .liquid-glass::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -50%;
+            width: 200%;
+            height: 100%;
+            background: linear-gradient(115deg, transparent 40%, rgba(255, 255, 255, 0.4) 50%, transparent 60%);
+            pointer-events: none;
+            transition: transform 0.75s ease;
+            transform: translateX(-100%);
+        }
+        .liquid-glass:hover::before {
+            transform: translateX(100%);
+        }
+
+        html.dark .liquid-glass, html.trueblack .liquid-glass {
+            background: rgba(24, 24, 27, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            box-shadow: 
+                0 8px 32px 0 rgba(0, 0, 0, 0.5),
+                inset 0 1px 1px 0 rgba(255, 255, 255, 0.15),
+                inset 0 -1px 2px 0 rgba(0, 0, 0, 0.4);
+        }
+
+        /* Dark mode inputs override */
+        html.dark input, html.dark textarea, html.dark select,
+        html.trueblack input, html.trueblack textarea, html.trueblack select {
+            background-color: #18181b !important;
+            color: #ffffff !important;
+            border-color: #27272a !important;
+        }
+
+        /* Keyframe Fade Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px) scale(0.99); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 9999px;
+        }
+        html.dark ::-webkit-scrollbar-thumb, html.trueblack ::-webkit-scrollbar-thumb {
+            background: #333333;
+        }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800 dark:bg-zinc-950 dark:text-slate-100 h-full font-sans antialiased selection:bg-brand-500 selection:text-white flex flex-col transition-colors duration-300">
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="fixed bottom-6 right-6 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    <!-- App Header with Liquid Glass Floating Style -->
+    <header class="sticky top-4 z-40 max-w-7xl mx-auto px-4 w-full">
+        <div class="liquid-glass rounded-3xl px-6 h-16 flex items-center justify-between shadow-lg">
+            <div class="flex items-center gap-3 cursor-pointer" onclick="app.switchView('dashboard')">
+                <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-brand-600 to-indigo-500 flex items-center justify-center text-white shadow-md shadow-brand-500/30 elastic-stretch">
+                    <i class="fa-solid fa-quote-right text-base"></i>
+                </div>
+                <div>
+                    <h1 class="text-lg font-extrabold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
+                        CiteFree
+                    </h1>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-3">
+                <!-- Theme Mode Switcher Menu -->
+                <div class="relative">
+                    <button onclick="app.cycleTheme(event)" id="theme-btn" class="w-10 h-10 rounded-2xl bg-slate-200/70 dark:bg-zinc-800/80 flex items-center justify-center text-slate-700 dark:text-slate-200 elastic-stretch" title="Toggle Theme (Click to toggle, right-click/long press for menu)" oncontextmenu="app.toggleThemeDropdown(event); return false;">
+                        <i id="theme-btn-icon" class="fa-solid fa-sun text-sm"></i>
+                    </button>
+                    <!-- Theme Dropdown Menu -->
+                    <div id="theme-dropdown" class="hidden absolute right-0 mt-2 w-48 liquid-glass rounded-2xl py-2 shadow-2xl z-50 animate-fade-in border border-slate-200 dark:border-zinc-800">
+                        <button onclick="app.setTheme('light', event)" class="w-full px-4 py-2 text-left text-xs font-semibold flex items-center gap-2.5 hover:bg-brand-50 dark:hover:bg-zinc-800/80 transition-smooth text-slate-800 dark:text-slate-200">
+                            <i class="fa-solid fa-sun text-amber-500 w-4"></i> Light Mode
+                        </button>
+                        <button onclick="app.setTheme('dark', event)" class="w-full px-4 py-2 text-left text-xs font-semibold flex items-center gap-2.5 hover:bg-brand-50 dark:hover:bg-zinc-800/80 transition-smooth text-slate-800 dark:text-slate-200">
+                            <i class="fa-solid fa-moon text-indigo-400 w-4"></i> Dark Mode
+                        </button>
+                        <button onclick="app.setTheme('trueblack', event)" class="w-full px-4 py-2 text-left text-xs font-semibold flex items-center gap-2.5 hover:bg-brand-50 dark:hover:bg-zinc-800/80 transition-smooth text-slate-800 dark:text-slate-200">
+                            <i class="fa-solid fa-circle text-black dark:text-white w-4"></i> True Black OLED
+                        </button>
+                    </div>
+                </div>
+
+                <button onclick="app.openProjectModal()" class="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold shadow-md shadow-brand-500/25 elastic-stretch">
+                    <i class="fa-solid fa-plus"></i> New Project
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col">
+        
+        <!-- VIEW 1: Dashboard / Projects Grid -->
+        <div id="view-dashboard" class="flex-1 flex flex-col animate-fade-in">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+                <div>
+                    <h2 class="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">Your Citation Projects</h2>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Manage and export your references instantly. Stored locally in your browser.</p>
+                </div>
+                <div class="flex items-center gap-3">
+                    <div class="relative flex-1 md:w-64">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3.5 text-slate-400 text-xs"></i>
+                        <input type="text" id="project-search" oninput="app.filterProjects(this.value)" placeholder="Search projects..." class="w-full pl-10 pr-4 py-2.5 rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-xs focus:outline-none focus:ring-2 focus:ring-brand-500/20 transition-smooth">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dashboard Grid -->
+            <div id="projects-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Injected via JavaScript -->
+            </div>
+
+            <!-- Empty State -->
+            <div id="projects-empty" class="hidden flex-1 flex flex-col items-center justify-center py-16 text-center">
+                <div class="w-16 h-16 rounded-3xl liquid-glass text-brand-600 flex items-center justify-center text-2xl mb-4 shadow-lg">
+                    <i class="fa-solid fa-folder-open"></i>
+                </div>
+                <h3 class="text-lg font-bold text-slate-800 dark:text-slate-100">No projects found</h3>
+                <p class="text-xs text-slate-500 dark:text-slate-400 max-w-sm mt-1 mb-6">Create your first citation project to start building your bibliography.</p>
+                <button onclick="app.openProjectModal()" class="px-5 py-2.5 rounded-2xl bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold elastic-stretch shadow-md">
+                    Create Project Now
+                </button>
+            </div>
+        </div>
+
+        <!-- VIEW 2: Project Workspace (Citations & Bibliography) -->
+        <div id="view-workspace" class="hidden flex-1 flex flex-col animate-fade-in">
+            <!-- Workspace Header Bar -->
+            <div class="card-siri p-6 mb-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div class="flex items-center gap-4">
+                    <button onclick="app.switchView('dashboard')" class="w-10 h-10 rounded-2xl border border-slate-200 dark:border-zinc-800 hover:bg-slate-100 dark:hover:bg-zinc-800 flex items-center justify-center text-slate-600 dark:text-slate-300 elastic-stretch" title="Back to Projects">
+                        <i class="fa-solid fa-arrow-left"></i>
+                    </button>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <h2 id="workspace-project-title" class="text-2xl font-extrabold text-slate-900 dark:text-white">Project Name</h2>
+                            <button onclick="app.openEditProjectModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-sm elastic-stretch" title="Rename Project">
+                                <i class="fa-solid fa-pen"></i>
+                            </button>
+                        </div>
+                        <p id="workspace-project-desc" class="text-xs text-slate-500 dark:text-slate-400">Project description here...</p>
+                    </div>
+                </div>
+
+                <div class="flex items-center flex-wrap gap-3">
+                    <!-- Citation Style Selector -->
+                    <div class="flex items-center gap-2 bg-slate-100 dark:bg-zinc-800/80 border border-slate-200 dark:border-zinc-700 rounded-2xl px-3 py-2">
+                        <span class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Style:</span>
+                        <select id="citation-style-select" onchange="app.changeCitationStyle(this.value)" class="bg-transparent text-xs font-bold text-slate-800 dark:text-slate-100 focus:outline-none cursor-pointer">
+                            <option value="apa7">APA 7th Edition</option>
+                            <option value="mla9">MLA 9th Edition</option>
+                            <option value="chicago17">Chicago 17th (Bib.)</option>
+                            <option value="harvard">Harvard Style</option>
+                            <option value="ieee">IEEE Style</option>
+                        </select>
+                    </div>
+
+                    <button onclick="app.openCitationModal()" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold elastic-stretch shadow-md">
+                        <i class="fa-solid fa-plus"></i> Add Citation
+                    </button>
+                </div>
+            </div>
+
+            <!-- Workspace Tabs -->
+            <div class="flex border-b border-slate-200 dark:border-zinc-800 mb-6 gap-6">
+                <button onclick="app.switchWorkspaceTab('document')" id="tab-btn-document" class="pb-3 text-xs font-bold text-brand-600 border-b-2 border-brand-600 transition-smooth flex items-center gap-2">
+                    <i class="fa-solid fa-file-lines"></i> Document View <span id="citation-count-badge" class="px-2 py-0.5 rounded-full bg-brand-50 text-brand-700 text-[10px]">0</span>
+                </button>
+                <button onclick="app.switchWorkspaceTab('export')" id="tab-btn-export" class="pb-3 text-xs font-semibold text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 border-b-2 border-transparent transition-smooth flex items-center gap-2">
+                    <i class="fa-solid fa-download"></i> Export & Share
+                </button>
+            </div>
+
+            <!-- Tab Content 1: Realistic Document Sheet View -->
+            <div id="tab-content-document" class="flex-1 flex flex-col items-center">
+                <div class="w-full flex items-center justify-between mb-4 max-w-4xl">
+                    <div class="relative flex-1 max-w-md">
+                        <i class="fa-solid fa-search absolute left-3.5 top-3.5 text-slate-400 text-xs"></i>
+                        <input type="text" id="citation-search" oninput="app.filterCitations(this.value)" placeholder="Search references on page..." class="w-full pl-10 pr-4 py-2.5 rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-xs focus:outline-none focus:ring-2 focus:ring-brand-500/20 transition-smooth">
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button onclick="window.print()" class="px-4 py-2 rounded-2xl bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-slate-200 text-xs font-bold shadow-sm elastic-stretch flex items-center gap-2">
+                            <i class="fa-solid fa-print"></i> Print / PDF
+                        </button>
+                        <button onclick="app.copyBibliography()" class="px-4 py-2 rounded-2xl bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold shadow-sm elastic-stretch flex items-center gap-2">
+                            <i class="fa-solid fa-copy"></i> Copy Page Text
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Realistic Paper Sheet Container (Stays crisp white in paper view) -->
+                <div class="w-full max-w-4xl bg-white text-slate-900 rounded-sm border border-slate-200/80 shadow-2xl p-8 sm:p-16 my-4 min-h-[842px] relative transition-smooth" id="paper-sheet">
+                    <div class="text-center mb-8">
+                        <h2 id="paper-document-heading" class="text-xl font-bold font-serif text-slate-900 tracking-tight">References</h2>
+                    </div>
+
+                    <!-- Continuous Running References List -->
+                    <div id="document-references-list" class="font-serif text-slate-900 text-base leading-relaxed space-y-6">
+                        <!-- Injected via JavaScript -->
+                    </div>
+
+                    <!-- Empty Document State -->
+                    <div id="document-empty" class="hidden flex flex-col items-center justify-center py-24 text-center">
+                        <div class="w-16 h-16 rounded-3xl bg-slate-50 text-slate-400 flex items-center justify-center text-2xl mb-4 border border-slate-100">
+                            <i class="fa-solid fa-file-pen"></i>
+                        </div>
+                        <h3 class="text-lg font-bold font-sans text-slate-800">Your page is currently empty</h3>
+                        <p class="text-xs font-sans text-slate-500 max-w-sm mt-1 mb-6">Click "+ Add Citation" to populate formatted entries onto this page sheet.</p>
+                        <button onclick="app.openCitationModal()" class="px-5 py-2.5 rounded-2xl bg-brand-600 text-white text-xs font-bold font-sans elastic-stretch shadow-md">
+                            + Add Citation to Page
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab Content 2: Export Options -->
+            <div id="tab-content-export" class="hidden flex-1 flex flex-col gap-6">
+                <div class="card-siri p-6 shadow-sm flex flex-col gap-6">
+                    <div>
+                        <h3 class="text-lg font-extrabold text-slate-900 dark:text-white">Export & Download Options</h3>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">Download formatted page references for LaTeX, Word, or plain text tools.</p>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <button onclick="app.copyBibliography()" class="p-6 rounded-3xl card-siri hover:border-brand-500 text-left elastic-stretch group">
+                            <i class="fa-solid fa-copy text-2xl text-brand-600 mb-2 group-hover:scale-110 transition-smooth"></i>
+                            <h4 class="font-bold text-xs text-slate-900 dark:text-white">Copy to Clipboard</h4>
+                            <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1">Copy raw text with hanging indentation.</p>
+                        </button>
+                        <button onclick="app.exportTxt()" class="p-6 rounded-3xl card-siri hover:border-brand-500 text-left elastic-stretch group">
+                            <i class="fa-solid fa-file-lines text-2xl text-brand-600 mb-2 group-hover:scale-110 transition-smooth"></i>
+                            <h4 class="font-bold text-xs text-slate-900 dark:text-white">Export .TXT</h4>
+                            <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1">Download document as plain text file.</p>
+                        </button>
+                        <button onclick="app.exportBibTeX()" class="p-6 rounded-3xl card-siri hover:border-brand-500 text-left elastic-stretch group">
+                            <i class="fa-solid fa-code text-2xl text-brand-600 mb-2 group-hover:scale-110 transition-smooth"></i>
+                            <h4 class="font-bold text-xs text-slate-900 dark:text-white">Export .BibTeX</h4>
+                            <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1">Export code for LaTeX & Overleaf.</p>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="mt-auto py-6 text-center text-[11px] text-slate-500 dark:text-slate-400">
+        <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <p>&copy; 2026 CiteFree.</p>
+            <div class="flex items-center gap-4">
+                <span class="hover:text-slate-800 dark:hover:text-white transition-smooth cursor-pointer" onclick="app.toggleHelpModal()">Privacy (Local Storage Only)</span>
+            </div>
+        </div>
+    </footer>
+
+    <!-- MODAL 1: Create / Edit Project Modal -->
+    <div id="modal-project" class="fixed inset-0 z-50 bg-black/50 backdrop-blur-md hidden items-center justify-center p-4 animate-fade-in">
+        <div class="card-siri shadow-2xl max-w-md w-full p-6 relative transform transition-all">
+            <div class="flex items-center justify-between mb-4">
+                <h3 id="project-modal-title" class="text-lg font-extrabold text-slate-900 dark:text-white">Create New Project</h3>
+                <button onclick="app.closeProjectModal()" class="w-8 h-8 rounded-xl hover:bg-slate-100 dark:hover:bg-zinc-800 flex items-center justify-center text-slate-400 transition-smooth">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <form id="project-form" onsubmit="app.handleProjectSubmit(event)" class="space-y-4">
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">Project Title</label>
+                    <input type="text" id="proj-name-input" required placeholder="e.g., Psychology Research Paper 2026" class="w-full px-4 py-2.5 rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-xs focus:outline-none focus:ring-2 focus:ring-brand-500/20 transition-smooth">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">Description (Optional)</label>
+                    <textarea id="proj-desc-input" rows="3" placeholder="e.g., Sources for behavioral analysis on digital distractions." class="w-full px-4 py-2.5 rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-xs focus:outline-none focus:ring-2 focus:ring-brand-500/20 transition-smooth"></textarea>
+                </div>
+                <div class="flex items-center justify-end gap-3 pt-2">
+                    <button type="button" onclick="app.closeProjectModal()" class="px-4 py-2 rounded-2xl border border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-slate-300 text-xs font-semibold transition-smooth">Cancel</button>
+                    <button type="submit" class="px-5 py-2 rounded-2xl bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold elastic-stretch shadow-md">Save Project</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 2: Add / Edit Citation Wizard Modal -->
+    <div id="modal-citation" class="fixed inset-0 z-50 bg-black/50 backdrop-blur-md hidden items-center justify-center p-4 overflow-y-auto animate-fade-in">
+        <div class="card-siri shadow-2xl max-w-2xl w-full p-6 my-8 relative transform transition-all">
+            <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100 dark:border-zinc-800">
+                <div class="flex items-center gap-3">
+                    <div id="citation-modal-icon" class="w-10 h-10 rounded-2xl bg-brand-50 dark:bg-brand-950 text-brand-600 dark:text-brand-400 flex items-center justify-center text-lg">
+                        <i class="fa-solid fa-globe"></i>
+                    </div>
+                    <div>
+                        <h3 id="citation-modal-title" class="text-lg font-extrabold text-slate-900 dark:text-white">Add New Citation</h3>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">Auto-fill or enter citation details manually</p>
+                    </div>
+                </div>
+                <button onclick="app.closeCitationModal()" class="w-8 h-8 rounded-xl hover:bg-slate-100 dark:hover:bg-zinc-800 flex items-center justify-center text-slate-400 transition-smooth">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <!-- Source Type Selector Tabs -->
+            <div class="grid grid-cols-5 gap-2 mb-6 bg-slate-100 dark:bg-zinc-900 p-1.5 rounded-2xl border border-slate-200 dark:border-zinc-800 text-xs font-medium text-center">
+                <button type="button" onclick="app.setSourceType('website')" id="stype-website" class="py-2 rounded-xl bg-white dark:bg-zinc-800 text-brand-700 dark:text-brand-400 shadow-sm transition-smooth flex flex-col items-center gap-1 font-bold">
+                    <i class="fa-solid fa-globe"></i> Website
+                </button>
+                <button type="button" onclick="app.setSourceType('book')" id="stype-book" class="py-2 rounded-xl text-slate-600 dark:text-slate-400 transition-smooth flex flex-col items-center gap-1">
+                    <i class="fa-solid fa-book"></i> Book
+                </button>
+                <button type="button" onclick="app.setSourceType('journal')" id="stype-journal" class="py-2 rounded-xl text-slate-600 dark:text-slate-400 transition-smooth flex flex-col items-center gap-1">
+                    <i class="fa-solid fa-file-lines"></i> Journal
+                </button>
+                <button type="button" onclick="app.setSourceType('video')" id="stype-video" class="py-2 rounded-xl text-slate-600 dark:text-slate-400 transition-smooth flex flex-col items-center gap-1">
+                    <i class="fa-solid fa-video"></i> Video
+                </button>
+                <button type="button" onclick="app.setSourceType('newspaper')" id="stype-newspaper" class="py-2 rounded-xl text-slate-600 dark:text-slate-400 transition-smooth flex flex-col items-center gap-1">
+                    <i class="fa-solid fa-newspaper"></i> News
+                </button>
+            </div>
+
+            <!-- Auto-Fill Liquid Glass Simulation Box -->
+            <div class="liquid-glass rounded-2xl p-4 mb-6">
+                <label class="block text-[10px] font-extrabold text-brand-700 dark:text-brand-300 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                    <i class="fa-solid fa-wand-magic-sparkles text-brand-600"></i> Quick Auto-Fill Metadata
+                </label>
+                <div class="flex gap-2">
+                    <input type="text" id="autofill-query" placeholder="Paste URL, DOI (10.1038/...) or ISBN (978-013...)" class="flex-1 px-3.5 py-2 rounded-xl border border-brand-200/60 bg-white/80 dark:bg-zinc-900/80 text-xs focus:outline-none transition-smooth">
+                    <button type="button" onclick="app.simulateAutoFill()" class="px-4 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold elastic-stretch shadow-md flex items-center gap-2">
+                        <i class="fa-solid fa-bolt"></i> Auto-Fill
+                    </button>
+                </div>
+            </div>
+
+            <!-- Citation Form -->
+            <form id="citation-form" onsubmit="app.handleCitationSubmit(event)" class="space-y-4">
+                <input type="hidden" id="edit-citation-id">
+                
+                <!-- Author Fields -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">Author Last Name</label>
+                        <input type="text" id="cit-author-last" placeholder="e.g., Smith" class="w-full px-4 py-2 rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-xs focus:outline-none transition-smooth">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">Author First Name</label>
+                        <input type="text" id="cit-author-first" placeholder="e.g., Jane A." class="w-full px-4 py-2 rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-xs focus:outline-none transition-smooth">
+                    </div>
+                </div>
+
+                <!-- Title -->
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">Title *</label>
+                    <input type="text" id="cit-title" required placeholder="e.g., Understanding Modern Cognitive Development" class="w-full px-4 py-2 rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-xs focus:outline-none transition-smooth">
+                </div>
+
+                <!-- Source Specific Container -->
+                <div id="source-specific-fields" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <!-- Dynamically populated -->
+                </div>
+
+                <!-- URL / DOI -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">URL</label>
+                        <input type="url" id="cit-url" placeholder="https://..." class="w-full px-4 py-2 rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-xs focus:outline-none transition-smooth">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">DOI / ISBN</label>
+                        <input type="text" id="cit-doi" placeholder="10.1016/j..." class="w-full px-4 py-2 rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-xs focus:outline-none transition-smooth">
+                    </div>
+                </div>
+
+                <!-- Modal Actions -->
+                <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-100 dark:border-zinc-800">
+                    <button type="button" onclick="app.closeCitationModal()" class="px-4 py-2 rounded-2xl border border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-slate-300 text-xs font-semibold transition-smooth">Cancel</button>
+                    <button type="submit" class="px-5 py-2 rounded-2xl bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold elastic-stretch shadow-md">Save Citation</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 3: Help & Guide Modal -->
+    <div id="modal-help" class="fixed inset-0 z-50 bg-black/50 backdrop-blur-md hidden items-center justify-center p-4 animate-fade-in">
+        <div class="card-siri shadow-2xl max-w-lg w-full p-6 relative transform transition-all">
+            <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100 dark:border-zinc-800">
+                <h3 class="text-lg font-extrabold text-slate-900 dark:text-white">About CiteFree</h3>
+                <button onclick="app.toggleHelpModal()" class="w-8 h-8 rounded-xl hover:bg-slate-100 dark:hover:bg-zinc-800 flex items-center justify-center text-slate-400 transition-smooth">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="space-y-4 text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                <p><strong>CiteFree</strong> is designed with Siri Mobile UI concepts, true liquid glass refractions, and spring elasticity for students & researchers.</p>
+            </div>
+            <div class="mt-6 pt-4 border-t border-slate-100 dark:border-zinc-800 flex justify-end">
+                <button onclick="app.toggleHelpModal()" class="px-5 py-2 rounded-2xl bg-brand-600 text-white text-xs font-bold elastic-stretch">Got it</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main JavaScript Logic -->
+    <script>
+        class CiteFreeApp {
+            constructor() {
+                this.projects = [];
+                try {
+                    this.projects = JSON.parse(localStorage.getItem('citefree_projects')) || [];
+                } catch(e) {
+                    this.projects = [];
+                }
+
+                this.theme = localStorage.getItem('citefree_theme') || 'light';
+                this.currentProjectId = null;
+                this.currentView = 'dashboard';
+                this.currentWorkspaceTab = 'document';
+                this.currentSourceType = 'website';
+                this.editingCitationId = null;
+                this.editingProjectId = null;
+
+                // Global listener to close dropdown when clicking outside
+                document.addEventListener('click', (e) => {
+                    const dropdown = document.getElementById('theme-dropdown');
+                    const themeBtn = document.getElementById('theme-btn');
+                    if (dropdown && !dropdown.classList.contains('hidden')) {
+                        if (!themeBtn.contains(e.target) && !dropdown.contains(e.target)) {
+                            dropdown.classList.add('hidden');
+                        }
+                    }
+                });
+
+                this.init();
+            }
+
+            init() {
+                this.applyTheme(this.theme);
+                this.renderDashboard();
+            }
+
+            /* --- Theme Controller Fixes --- */
+            cycleTheme(e) {
+                if (e) e.stopPropagation();
+                if (this.theme === 'light') {
+                    this.setTheme('dark');
+                } else if (this.theme === 'dark') {
+                    this.setTheme('trueblack');
+                } else {
+                    this.setTheme('light');
+                }
+            }
+
+            toggleThemeDropdown(e) {
+                if (e) {
+                    e.stopPropagation();
+                    e.preventDefault();
+                }
+                const dd = document.getElementById('theme-dropdown');
+                if (dd) dd.classList.toggle('hidden');
+            }
+
+            setTheme(mode, e) {
+                if (e) e.stopPropagation();
+                this.theme = mode;
+                localStorage.setItem('citefree_theme', mode);
+                this.applyTheme(mode);
+                const dd = document.getElementById('theme-dropdown');
+                if (dd) dd.classList.add('hidden');
+            }
+
+            applyTheme(mode) {
+                const htmlEl = document.documentElement;
+                const icon = document.getElementById('theme-btn-icon');
+
+                // Clean class updates on <html> tag
+                htmlEl.classList.remove('dark', 'trueblack');
+
+                if (mode === 'dark') {
+                    htmlEl.classList.add('dark');
+                    if (icon) icon.className = 'fa-solid fa-moon text-indigo-400 text-sm';
+                    this.showToast('Dark Mode Enabled');
+                } else if (mode === 'trueblack') {
+                    htmlEl.classList.add('dark', 'trueblack');
+                    if (icon) icon.className = 'fa-solid fa-moon text-slate-100 text-sm';
+                    this.showToast('True Black OLED Enabled');
+                } else {
+                    if (icon) icon.className = 'fa-solid fa-sun text-amber-500 text-sm';
+                    this.showToast('Light Mode Enabled');
+                }
+            }
+
+            saveProjects() {
+                localStorage.setItem('citefree_projects', JSON.stringify(this.projects));
+            }
+
+            showToast(message, type = 'success') {
+                const container = document.getElementById('toast-container');
+                if (!container) return;
+                
+                const toast = document.createElement('div');
+                toast.className = `pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-2xl shadow-xl border text-xs font-bold animate-fade-in ${
+                    type === 'success' 
+                        ? 'bg-slate-900 text-white border-slate-800 dark:bg-white dark:text-slate-900' 
+                        : 'bg-red-600 text-white border-red-500'
+                }`;
+                
+                const icon = document.createElement('i');
+                icon.className = type === 'success' ? 'fa-solid fa-circle-check text-emerald-400' : 'fa-solid fa-circle-exclamation text-white';
+                toast.appendChild(icon);
+
+                const text = document.createElement('span');
+                text.textContent = message;
+                toast.appendChild(text);
+
+                container.appendChild(toast);
+
+                setTimeout(() => {
+                    toast.style.opacity = '0';
+                    toast.style.transform = 'translateY(10px)';
+                    toast.style.transition = 'all 0.3s ease';
+                    setTimeout(() => toast.remove(), 300);
+                }, 3000);
+            }
+
+            switchView(viewName) {
+                this.currentView = viewName;
+                const dash = document.getElementById('view-dashboard');
+                const work = document.getElementById('view-workspace');
+
+                if (viewName === 'dashboard') {
+                    dash.classList.remove('hidden');
+                    work.classList.add('hidden');
+                    this.renderDashboard();
+                } else {
+                    dash.classList.add('hidden');
+                    work.classList.remove('hidden');
+                    this.renderWorkspace();
+                }
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+
+            /* --- Dashboard Siri AI Card Grid --- */
+            renderDashboard(filterText = '') {
+                const grid = document.getElementById('projects-grid');
+                const emptyState = document.getElementById('projects-empty');
+                grid.innerHTML = '';
+
+                const filtered = this.projects.filter(p => 
+                    p.title.toLowerCase().includes(filterText.toLowerCase()) || 
+                    (p.description && p.description.toLowerCase().includes(filterText.toLowerCase()))
+                );
+
+                if (filtered.length === 0) {
+                    emptyState.classList.remove('hidden');
+                    grid.classList.add('hidden');
+                    return;
+                }
+
+                emptyState.classList.add('hidden');
+                grid.classList.remove('hidden');
+
+                filtered.forEach(proj => {
+                    const card = document.createElement('div');
+                    card.className = 'card-siri p-6 flex flex-col justify-between elastic-stretch cursor-pointer group shadow-sm hover:shadow-xl relative';
+                    
+                    const citationCount = proj.citations.length;
+                    const dateStr = new Date(proj.createdAt).toLocaleDateString('en-GB');
+
+                    card.onclick = (e) => {
+                        if (!e.target.closest('.action-btn')) {
+                            this.openProject(proj.id);
+                        }
+                    };
+
+                    card.innerHTML = `
+                        <div>
+                            <div class="flex items-center justify-between text-[11px] font-bold text-slate-400 dark:text-slate-500 mb-2">
+                                <span>${dateStr}</span>
+                                <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-smooth">
+                                    <button onclick="app.openEditProjectModal('${proj.id}')" class="action-btn w-7 h-7 rounded-xl hover:bg-slate-100 dark:hover:bg-zinc-800 flex items-center justify-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                                        <i class="fa-solid fa-pen text-[10px]"></i>
+                                    </button>
+                                    <button onclick="app.deleteProject('${proj.id}')" class="action-btn w-7 h-7 rounded-xl hover:bg-red-50 dark:hover:bg-red-950/40 flex items-center justify-center text-slate-400 hover:text-red-500">
+                                        <i class="fa-solid fa-trash text-[10px]"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <h3 class="text-xl font-extrabold text-slate-900 dark:text-white leading-snug group-hover:text-brand-600 transition-smooth mb-2">
+                                ${this.escapeHtml(proj.title)}
+                            </h3>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-3 leading-relaxed mb-4">
+                                ${this.escapeHtml(proj.description || 'No description provided.')}
+                            </p>
+                        </div>
+                        <div class="pt-4 border-t border-slate-100 dark:border-zinc-800/80 flex items-center justify-between">
+                            <span class="text-xs font-bold text-brand-600 dark:text-brand-400 flex items-center gap-1.5">
+                                <i class="fa-solid fa-quote-left text-xs"></i> ${citationCount} source${citationCount === 1 ? '' : 's'}
+                            </span>
+                            <span class="w-8 h-8 rounded-full bg-slate-100 dark:bg-zinc-800 flex items-center justify-center text-slate-600 dark:text-slate-300 group-hover:bg-brand-600 group-hover:text-white transition-smooth">
+                                <i class="fa-solid fa-chevron-right text-xs"></i>
+                            </span>
+                        </div>
+                    `;
+                    grid.appendChild(card);
+                });
+            }
+
+            filterProjects(query) {
+                this.renderDashboard(query);
+            }
+
+            openProject(projId) {
+                this.currentProjectId = projId;
+                this.switchView('workspace');
+            }
+
+            openProjectModal() {
+                this.editingProjectId = null;
+                document.getElementById('project-modal-title').textContent = 'Create New Project';
+                document.getElementById('proj-name-input').value = '';
+                document.getElementById('proj-desc-input').value = '';
+                document.getElementById('modal-project').classList.remove('hidden');
+                document.getElementById('modal-project').classList.add('flex');
+            }
+
+            openEditProjectModal(projId = null) {
+                if (!projId) projId = this.currentProjectId;
+                const proj = this.projects.find(p => p.id === projId);
+                if (!proj) return;
+
+                this.editingProjectId = projId;
+                document.getElementById('project-modal-title').textContent = 'Edit Project';
+                document.getElementById('proj-name-input').value = proj.title;
+                document.getElementById('proj-desc-input').value = proj.description || '';
+                document.getElementById('modal-project').classList.remove('hidden');
+                document.getElementById('modal-project').classList.add('flex');
+            }
+
+            closeProjectModal() {
+                document.getElementById('modal-project').classList.remove('flex');
+                document.getElementById('modal-project').classList.add('hidden');
+            }
+
+            handleProjectSubmit(e) {
+                e.preventDefault();
+                const title = document.getElementById('proj-name-input').value.trim();
+                const description = document.getElementById('proj-desc-input').value.trim();
+
+                if (!title) return;
+
+                if (this.editingProjectId) {
+                    const proj = this.projects.find(p => p.id === this.editingProjectId);
+                    if (proj) {
+                        proj.title = title;
+                        proj.description = description;
+                        this.showToast('Project updated successfully!');
+                    }
+                } else {
+                    const newProj = {
+                        id: 'proj_' + Date.now(),
+                        title,
+                        description,
+                        style: 'apa7',
+                        citations: [],
+                        createdAt: new Date().toISOString()
+                    };
+                    this.projects.push(newProj);
+                    this.currentProjectId = newProj.id;
+                    this.showToast('New project created!');
+                }
+
+                this.saveProjects();
+                this.closeProjectModal();
+                if (this.currentView === 'dashboard') {
+                    this.renderDashboard();
+                } else {
+                    this.renderWorkspace();
+                }
+            }
+
+            deleteProject(projId) {
+                if (confirm('Are you sure you want to delete this project?')) {
+                    this.projects = this.projects.filter(p => p.id !== projId);
+                    this.saveProjects();
+                    this.showToast('Project deleted', 'error');
+                    if (this.currentProjectId === projId) {
+                        this.switchView('dashboard');
+                    } else {
+                        this.renderDashboard();
+                    }
+                }
+            }
+
+            /* --- Workspace & Document Sheet Rendering --- */
+            getCurrentProject() {
+                return this.projects.find(p => p.id === this.currentProjectId);
+            }
+
+            renderWorkspace() {
+                const proj = this.getCurrentProject();
+                if (!proj) {
+                    this.switchView('dashboard');
+                    return;
+                }
+
+                document.getElementById('workspace-project-title').textContent = proj.title;
+                document.getElementById('workspace-project-desc').textContent = proj.description || 'No description';
+                document.getElementById('citation-style-select').value = proj.style || 'apa7';
+                document.getElementById('citation-count-badge').textContent = proj.citations.length;
+
+                this.renderDocumentView();
+            }
+
+            switchWorkspaceTab(tabName) {
+                this.currentWorkspaceTab = tabName;
+                const docBtn = document.getElementById('tab-btn-document');
+                const expBtn = document.getElementById('tab-btn-export');
+                const docContent = document.getElementById('tab-content-document');
+                const expContent = document.getElementById('tab-content-export');
+
+                if (tabName === 'document') {
+                    docBtn.className = 'pb-3 text-xs font-bold text-brand-600 border-b-2 border-brand-600 transition-smooth flex items-center gap-2';
+                    expBtn.className = 'pb-3 text-xs font-semibold text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 border-b-2 border-transparent transition-smooth flex items-center gap-2';
+                    docContent.classList.remove('hidden');
+                    expContent.classList.add('hidden');
+                } else {
+                    expBtn.className = 'pb-3 text-xs font-bold text-brand-600 border-b-2 border-brand-600 transition-smooth flex items-center gap-2';
+                    docBtn.className = 'pb-3 text-xs font-semibold text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 border-b-2 border-transparent transition-smooth flex items-center gap-2';
+                    expContent.classList.remove('hidden');
+                    docContent.classList.add('hidden');
+                }
+            }
+
+            changeCitationStyle(styleCode) {
+                const proj = this.getCurrentProject();
+                if (!proj) return;
+                proj.style = styleCode;
+                this.saveProjects();
+                this.renderDocumentView();
+                this.showToast(`Switched style to ${this.getStyleDisplayName(styleCode)}`);
+            }
+
+            getStyleHeading(code) {
+                switch(code) {
+                    case 'mla9': return 'Works Cited';
+                    case 'chicago17': return 'Bibliography';
+                    default: return 'References';
+                }
+            }
+
+            renderDocumentView(filterText = '') {
+                const proj = this.getCurrentProject();
+                if (!proj) return;
+
+                const listContainer = document.getElementById('document-references-list');
+                const emptyState = document.getElementById('document-empty');
+                const pageHeading = document.getElementById('paper-document-heading');
+                
+                pageHeading.textContent = this.getStyleHeading(proj.style);
+                listContainer.innerHTML = '';
+
+                const filtered = proj.citations.filter(c => 
+                    c.title.toLowerCase().includes(filterText.toLowerCase()) ||
+                    c.authorLast.toLowerCase().includes(filterText.toLowerCase()) ||
+                    c.authorFirst.toLowerCase().includes(filterText.toLowerCase())
+                );
+
+                if (filtered.length === 0) {
+                    emptyState.classList.remove('hidden');
+                    listContainer.classList.add('hidden');
+                    return;
+                }
+
+                emptyState.classList.add('hidden');
+                listContainer.classList.remove('hidden');
+
+                const sorted = [...filtered].sort((a, b) => 
+                    (a.authorLast || '').localeCompare(b.authorLast || '')
+                );
+
+                sorted.forEach(cit => {
+                    const row = document.createElement('div');
+                    row.className = 'group relative pl-9 -indent-9 hover:bg-slate-50 p-2 rounded-xl transition-smooth border border-transparent hover:border-slate-100';
+
+                    const formattedString = this.formatSingleCitation(cit, proj.style);
+                    const htmlFormatted = formattedString.replace(/\*(.*?)\*/g, '<em>$1</em>');
+                    const inText = this.formatInTextCitation(cit, proj.style);
+
+                    row.innerHTML = `
+                        <div class="inline-block text-slate-900 leading-relaxed font-serif">
+                            ${htmlFormatted}
+                        </div>
+                        <div class="opacity-0 group-hover:opacity-100 transition-smooth absolute right-2 top-2 flex items-center gap-1.5 bg-white/95 backdrop-blur border border-slate-200 px-2.5 py-1 rounded-xl shadow-sm indent-0 font-sans text-xs">
+                            <span class="text-[10px] font-bold text-brand-600 mr-1">In-text: (${inText})</span>
+                            <button onclick="app.copySingleCitation('${this.escapeQuotes(formattedString)}')" class="hover:text-brand-600 text-slate-500 p-1" title="Copy Citation">
+                                <i class="fa-solid fa-copy"></i>
+                            </button>
+                            <button onclick="app.openCitationModal('${cit.id}')" class="hover:text-brand-600 text-slate-500 p-1" title="Edit Citation">
+                                <i class="fa-solid fa-pen"></i>
+                            </button>
+                            <button onclick="app.deleteCitation('${cit.id}')" class="hover:text-red-600 text-slate-500 p-1" title="Delete Citation">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </div>
+                    `;
+                    listContainer.appendChild(row);
+                });
+            }
+
+            filterCitations(query) {
+                this.renderDocumentView(query);
+            }
+
+            getStyleDisplayName(code) {
+                switch(code) {
+                    case 'apa7': return 'APA 7th';
+                    case 'mla9': return 'MLA 9th';
+                    case 'chicago17': return 'Chicago 17th';
+                    case 'harvard': return 'Harvard';
+                    case 'ieee': return 'IEEE';
+                    default: return 'APA 7th';
+                }
+            }
+
+            /* --- Citations CRUD & Wizard Logic --- */
+            setSourceType(type) {
+                this.currentSourceType = type;
+                ['website', 'book', 'journal', 'video', 'newspaper'].forEach(t => {
+                    const btn = document.getElementById(`stype-${t}`);
+                    if (t === type) {
+                        btn.className = 'py-2 rounded-xl bg-white dark:bg-zinc-800 text-brand-700 dark:text-brand-400 shadow-sm transition-smooth flex flex-col items-center gap-1 font-bold';
+                    } else {
+                        btn.className = 'py-2 rounded-xl text-slate-600 dark:text-slate-400 transition-smooth flex flex-col items-center gap-1 font-medium';
+                    }
+                });
+
+                const iconMap = { website: 'fa-globe', book: 'fa-book', journal: 'fa-file-lines', video: 'fa-video', newspaper: 'fa-newspaper' };
+                document.getElementById('citation-modal-icon').innerHTML = `<i class="fa-solid ${iconMap[type]}"></i>`;
+                this.renderSourceSpecificFields(type);
+            }
+
+            renderSourceSpecificFields(type, data = {}) {
+                const container = document.getElementById('source-specific-fields');
+                let html = '';
+
+                if (type === 'website') {
+                    html = `
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">Website / Publisher Name</label>
+                            <input type="text" id="spec-siteName" value="${data.siteName || ''}" placeholder="e.g., BBC News" class="w-full px-4 py-2 rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-xs focus:outline-none transition-smooth">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">Publication Year</label>
+                            <input type="text" id="spec-year" value="${data.year || ''}" placeholder="e.g., 2026" class="w-full px-4 py-2 rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-xs focus:outline-none transition-smooth">
+                        </div>
+                    `;
+                } else if (type === 'book') {
+                    html = `
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">Publisher</label>
+                            <input type="text" id="spec-publisher" value="${data.publisher || ''}" placeholder="e.g., Penguin Books" class="w-full px-4 py-2 rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-xs focus:outline-none transition-smooth">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">Publication Year</label>
+                            <input type="text" id="spec-year" value="${data.year || ''}" placeholder="e.g., 2021" class="w-full px-4 py-2 rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-xs focus:outline-none transition-smooth">
+                        </div>
+                    `;
+                } else if (type === 'journal') {
+                    html = `
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">Journal Name</label>
+                            <input type="text" id="spec-journalName" value="${data.journalName || ''}" placeholder="e.g., Nature Neuroscience" class="w-full px-4 py-2 rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-xs focus:outline-none transition-smooth">
+                        </div>
+                        <div class="grid grid-cols-3 gap-2">
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Vol.</label>
+                                <input type="text" id="spec-volume" value="${data.volume || ''}" placeholder="42" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-xs focus:outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Issue</label>
+                                <input type="text" id="spec-issue" value="${data.issue || ''}" placeholder="3" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-xs focus:outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Pages</label>
+                                <input type="text" id="spec-pages" value="${data.pages || ''}" placeholder="112-120" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-xs focus:outline-none">
+                            </div>
+                        </div>
+                    `;
+                } else if (type === 'video') {
+                    html = `
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">Platform / Uploader</label>
+                            <input type="text" id="spec-platform" value="${data.platform || ''}" placeholder="e.g., YouTube / TED" class="w-full px-4 py-2 rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-xs focus:outline-none transition-smooth">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">Publication Year</label>
+                            <input type="text" id="spec-year" value="${data.year || ''}" placeholder="e.g., 2025" class="w-full px-4 py-2 rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-xs focus:outline-none transition-smooth">
+                        </div>
+                    `;
+                } else if (type === 'newspaper') {
+                    html = `
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">Newspaper Name</label>
+                            <input type="text" id="spec-newsName" value="${data.newsName || ''}" placeholder="e.g., The New York Times" class="w-full px-4 py-2 rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-xs focus:outline-none transition-smooth">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">Publication Date</label>
+                            <input type="text" id="spec-date" value="${data.date || ''}" placeholder="e.g., June 12, 2026" class="w-full px-4 py-2 rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-xs focus:outline-none transition-smooth">
+                        </div>
+                    `;
+                }
+
+                container.innerHTML = html;
+            }
+
+            openCitationModal(citId = null) {
+                this.editingCitationId = citId;
+                const modal = document.getElementById('modal-citation');
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+
+                if (citId) {
+                    const proj = this.getCurrentProject();
+                    const cit = proj.citations.find(c => c.id === citId);
+                    if (!cit) return;
+
+                    document.getElementById('citation-modal-title').textContent = 'Edit Citation';
+                    this.setSourceType(cit.type);
+                    document.getElementById('cit-author-last').value = cit.authorLast || '';
+                    document.getElementById('cit-author-first').value = cit.authorFirst || '';
+                    document.getElementById('cit-title').value = cit.title || '';
+                    document.getElementById('cit-url').value = cit.url || '';
+                    document.getElementById('cit-doi').value = cit.doi || '';
+                    this.renderSourceSpecificFields(cit.type, cit.sourceSpecific || {});
+                } else {
+                    document.getElementById('citation-modal-title').textContent = 'Add New Citation';
+                    this.setSourceType('website');
+                    document.getElementById('citation-form').reset();
+                    document.getElementById('autofill-query').value = '';
+                    this.renderSourceSpecificFields('website');
+                }
+            }
+
+            closeCitationModal() {
+                document.getElementById('modal-citation').classList.remove('flex');
+                document.getElementById('modal-citation').classList.add('hidden');
+            }
+
+            async simulateAutoFill() {
+                const query = document.getElementById('autofill-query').value.trim();
+                if (!query) {
+                    this.showToast('Please enter a URL, DOI, or ISBN first', 'error');
+                    return;
+                }
+
+                this.showToast('Fetching real-time metadata...');
+                const cleanQuery = query.trim();
+
+                try {
+                    // 1. DYNAMIC DOI RESOLUTION (Crossref REST API)
+                    if (cleanQuery.includes('10.') || cleanQuery.startsWith('doi:') || cleanQuery.includes('doi.org/')) {
+                        let doiStr = cleanQuery;
+                        if (cleanQuery.includes('doi.org/')) {
+                            doiStr = cleanQuery.split('doi.org/')[1];
+                        } else if (cleanQuery.startsWith('doi:')) {
+                            doiStr = cleanQuery.replace('doi:', '');
+                        }
+
+                        const res = await fetch(`https://api.crossref.org/works/${encodeURIComponent(doiStr)}`);
+                        if (!res.ok) throw new Error('DOI not found');
+                        const data = await res.json();
+                        const item = data.message;
+
+                        this.setSourceType('journal');
+
+                        // Authors
+                        if (item.author && item.author.length > 0) {
+                            document.getElementById('cit-author-last').value = item.author[0].family || '';
+                            document.getElementById('cit-author-first').value = item.author[0].given || '';
+                        } else {
+                            document.getElementById('cit-author-last').value = '';
+                            document.getElementById('cit-author-first').value = '';
+                        }
+
+                        // Title & Metadata
+                        document.getElementById('cit-title').value = (item.title && item.title[0]) ? item.title[0] : '';
+                        document.getElementById('cit-doi').value = item.DOI || doiStr;
+                        document.getElementById('cit-url').value = item.URL || `https://doi.org/${doiStr}`;
+                        
+                        const jName = (item['container-title'] && item['container-title'][0]) ? item['container-title'][0] : '';
+                        document.getElementById('spec-journalName').value = jName;
+                        document.getElementById('spec-volume').value = item.volume || '';
+                        document.getElementById('spec-issue').value = item.issue || '';
+                        document.getElementById('spec-pages').value = item.page || '';
+
+                        this.showToast('Real DOI metadata populated!');
+                        return;
+                    }
+
+                    // 2. DYNAMIC ISBN RESOLUTION (Open Library API)
+                    const isbnCandidate = cleanQuery.replace(/[^0-9X]/gi, '');
+                    if ((isbnCandidate.length === 10 || isbnCandidate.length === 13) && !cleanQuery.includes('.')) {
+                        const res = await fetch(`https://openlibrary.org/api/books?bibkeys=ISBN:${isbnCandidate}&format=json&jscmd=data`);
+                        const data = await res.json();
+                        const bookKey = `ISBN:${isbnCandidate}`;
+
+                        if (data[bookKey]) {
+                            const book = data[bookKey];
+                            this.setSourceType('book');
+
+                            if (book.authors && book.authors.length > 0) {
+                                const names = book.authors[0].name.split(' ');
+                                document.getElementById('cit-author-last').value = names.pop() || '';
+                                document.getElementById('cit-author-first').value = names.join(' ') || '';
+                            }
+
+                            document.getElementById('cit-title').value = book.title || '';
+                            document.getElementById('cit-doi').value = isbnCandidate;
+                            if (book.publishers && book.publishers.length > 0) {
+                                document.getElementById('spec-publisher').value = book.publishers[0].name || '';
+                            }
+                            if (book.publish_date) {
+                                const yearMatch = book.publish_date.match(/\d{4}/);
+                                document.getElementById('spec-year').value = yearMatch ? yearMatch[0] : book.publish_date;
+                            }
+                            this.showToast('Real ISBN book metadata populated!');
+                            return;
+                        }
+                    }
+
+                    // 3. DYNAMIC WEBSITE URL RESOLUTION (Open Graph API)
+                    let targetUrl = cleanQuery;
+                    if (!targetUrl.startsWith('http://') && !targetUrl.startsWith('https://')) {
+                        targetUrl = 'https://' + targetUrl;
+                    }
+
+                    const res = await fetch(`https://api.microlink.io?url=${encodeURIComponent(targetUrl)}`);
+                    if (!res.ok) throw new Error('URL fetch failed');
+                    const urlData = await res.json();
+
+                    if (urlData.status === 'success' && urlData.data) {
+                        const info = urlData.data;
+                        this.setSourceType('website');
+
+                        // Author
+                        if (info.author) {
+                            const names = info.author.split(' ');
+                            document.getElementById('cit-author-last').value = names.pop() || '';
+                            document.getElementById('cit-author-first').value = names.join(' ') || '';
+                        } else {
+                            document.getElementById('cit-author-last').value = info.publisher || info.publisher || '';
+                            document.getElementById('cit-author-first').value = '';
+                        }
+
+                        document.getElementById('cit-title').value = info.title || '';
+                        document.getElementById('cit-url').value = info.url || targetUrl;
+                        document.getElementById('spec-siteName').value = info.publisher || new URL(targetUrl).hostname.replace('www.', '');
+
+                        if (info.date) {
+                            const yearMatch = info.date.match(/\d{4}/);
+                            document.getElementById('spec-year').value = yearMatch ? yearMatch[0] : new Date().getFullYear().toString();
+                        } else {
+                            document.getElementById('spec-year').value = new Date().getFullYear().toString();
+                        }
+
+                        this.showToast('Real URL metadata extracted!');
+                        return;
+                    }
+
+                    throw new Error('Could not parse link');
+
+                } catch (err) {
+                    console.error(err);
+                    this.showToast('Could not auto-fetch metadata. Please fill manually.', 'error');
+                }
+            }
+
+            handleCitationSubmit(e) {
+                e.preventDefault();
+                const proj = this.getCurrentProject();
+                if (!proj) return;
+
+                const authorLast = document.getElementById('cit-author-last').value.trim();
+                const authorFirst = document.getElementById('cit-author-first').value.trim();
+                const title = document.getElementById('cit-title').value.trim();
+                const url = document.getElementById('cit-url').value.trim();
+                const doi = document.getElementById('cit-doi').value.trim();
+
+                const sourceSpecific = {};
+                if (this.currentSourceType === 'website') {
+                    sourceSpecific.siteName = document.getElementById('spec-siteName')?.value.trim() || '';
+                    sourceSpecific.year = document.getElementById('spec-year')?.value.trim() || '2026';
+                } else if (this.currentSourceType === 'book') {
+                    sourceSpecific.publisher = document.getElementById('spec-publisher')?.value.trim() || '';
+                    sourceSpecific.year = document.getElementById('spec-year')?.value.trim() || '2026';
+                } else if (this.currentSourceType === 'journal') {
+                    sourceSpecific.journalName = document.getElementById('spec-journalName')?.value.trim() || '';
+                    sourceSpecific.volume = document.getElementById('spec-volume')?.value.trim() || '';
+                    sourceSpecific.issue = document.getElementById('spec-issue')?.value.trim() || '';
+                    sourceSpecific.pages = document.getElementById('spec-pages')?.value.trim() || '';
+                } else if (this.currentSourceType === 'video') {
+                    sourceSpecific.platform = document.getElementById('spec-platform')?.value.trim() || '';
+                    sourceSpecific.year = document.getElementById('spec-year')?.value.trim() || '2026';
+                } else if (this.currentSourceType === 'newspaper') {
+                    sourceSpecific.newsName = document.getElementById('spec-newsName')?.value.trim() || '';
+                    sourceSpecific.date = document.getElementById('spec-date')?.value.trim() || '2026';
+                }
+
+                if (this.editingCitationId) {
+                    const cit = proj.citations.find(c => c.id === this.editingCitationId);
+                    if (cit) {
+                        cit.type = this.currentSourceType;
+                        cit.authorLast = authorLast;
+                        cit.authorFirst = authorFirst;
+                        cit.title = title;
+                        cit.url = url;
+                        cit.doi = doi;
+                        cit.sourceSpecific = sourceSpecific;
+                        this.showToast('Citation updated successfully!');
+                    }
+                } else {
+                    const newCit = {
+                        id: 'cit_' + Date.now(),
+                        type: this.currentSourceType,
+                        authorLast,
+                        authorFirst,
+                        title,
+                        url,
+                        doi,
+                        sourceSpecific
+                    };
+                    proj.citations.push(newCit);
+                    this.showToast('Citation added successfully!');
+                }
+
+                this.saveProjects();
+                this.closeCitationModal();
+                this.renderWorkspace();
+            }
+
+            deleteCitation(citId) {
+                const proj = this.getCurrentProject();
+                if (!proj) return;
+                proj.citations = proj.citations.filter(c => c.id !== citId);
+                this.saveProjects();
+                this.renderWorkspace();
+                this.showToast('Citation deleted', 'error');
+            }
+
+            formatSingleCitation(cit, style) {
+                const last = cit.authorLast || 'Unknown Author';
+                const first = cit.authorFirst || '';
+                const title = cit.title || 'Untitled';
+                const s = cit.sourceSpecific || {};
+
+                switch(style) {
+                    case 'apa7': {
+                        const authorStr = first ? `${last}, ${first.charAt(0)}.` : last;
+                        const year = s.year || '2026';
+                        if (cit.type === 'book') {
+                            const pub = s.publisher || 'Publisher';
+                            return `${authorStr} (${year}). *${title}*. ${pub}.`;
+                        } else if (cit.type === 'website') {
+                            const site = s.siteName || 'Website';
+                            const urlStr = cit.url ? ` ${cit.url}` : '';
+                            return `${authorStr} (${year}). *${title}*. ${site}.${urlStr}`;
+                        } else if (cit.type === 'journal') {
+                            const jName = s.journalName || 'Journal';
+                            const vol = s.volume ? ` ${s.volume}` : '';
+                            const iss = s.issue ? `(${s.issue})` : '';
+                            const pages = s.pages ? `, ${s.pages}` : '';
+                            return `${authorStr} (${year}). ${title}. *${jName}*${vol}${iss}${pages}.`;
+                        } else if (cit.type === 'video') {
+                            const platform = s.platform || 'YouTube';
+                            return `${authorStr} (${year}). *${title}* [Video]. ${platform}.`;
+                        } else if (cit.type === 'newspaper') {
+                            const news = s.newsName || 'Newspaper';
+                            const date = s.date || '2026';
+                            return `${authorStr} (${date}). ${title}. *${news}*.`;
+                        }
+                        break;
+                    }
+                    case 'mla9': {
+                        const authorStr = first ? `${last}, ${first}.` : `${last}.`;
+                        if (cit.type === 'book') {
+                            const pub = s.publisher || 'Publisher';
+                            const year = s.year || '2026';
+                            return `${authorStr} *${title}*. ${pub}, ${year}.`;
+                        } else if (cit.type === 'website') {
+                            const site = s.siteName || 'Website';
+                            const year = s.year || '2026';
+                            const urlStr = cit.url ? ` ${cit.url}.` : '';
+                            return `${authorStr} "${title}." *${site}*, ${year},${urlStr}`;
+                        } else if (cit.type === 'journal') {
+                            const jName = s.journalName || 'Journal';
+                            const vol = s.volume ? `vol. ${s.volume}, ` : '';
+                            const iss = s.issue ? `no. ${s.issue}, ` : '';
+                            const year = s.year || '2026';
+                            const pages = s.pages ? `pp. ${s.pages}.` : '';
+                            return `${authorStr} "${title}." *${jName}*, ${vol}${iss}${year}, ${pages}`;
+                        } else if (cit.type === 'video') {
+                            const platform = s.platform || 'YouTube';
+                            const year = s.year || '2026';
+                            return `${authorStr} "${title}." *${platform}*, ${year}.`;
+                        } else if (cit.type === 'newspaper') {
+                            const news = s.newsName || 'Newspaper';
+                            const date = s.date || '2026';
+                            return `${authorStr} "${title}." *${news}*, ${date}.`;
+                        }
+                        break;
+                    }
+                    case 'chicago17': {
+                        const authorStr = first ? `${last}, ${first}.` : `${last}.`;
+                        if (cit.type === 'book') {
+                            const pub = s.publisher || 'Publisher';
+                            const year = s.year || '2026';
+                            return `${authorStr} *${title}*. ${pub}, ${year}.`;
+                        } else if (cit.type === 'website') {
+                            const site = s.siteName || 'Website';
+                            const urlStr = cit.url ? ` ${cit.url}.` : '';
+                            return `${authorStr} "${title}." *${site}*. Accessed 2026.${urlStr}`;
+                        } else if (cit.type === 'journal') {
+                            const jName = s.journalName || 'Journal';
+                            const vol = s.volume || '';
+                            const year = s.year || '2026';
+                            const pages = s.pages ? `: ${s.pages}` : '';
+                            return `${authorStr} "${title}." *${jName}* ${vol} (${year})${pages}.`;
+                        }
+                        break;
+                    }
+                    case 'harvard': {
+                        const authorStr = first ? `${last}, ${first.charAt(0)}.` : last;
+                        const year = s.year || '2026';
+                        if (cit.type === 'book') {
+                            const pub = s.publisher || 'Publisher';
+                            return `${authorStr} (${year}) *${title}*. ${pub}.`;
+                        } else if (cit.type === 'website') {
+                            const site = s.siteName || 'Website';
+                            const urlStr = cit.url ? ` Available at: ${cit.url}` : '';
+                            return `${authorStr} (${year}) *${title}*. ${site}.${urlStr}`;
+                        }
+                        break;
+                    }
+                    case 'ieee': {
+                        const authorStr = first ? `${first.charAt(0)}. ${last}` : last;
+                        if (cit.type === 'book') {
+                            const pub = s.publisher || 'Publisher';
+                            const year = s.year || '2026';
+                            return `${authorStr}, *${title}*. ${pub}, ${year}.`;
+                        } else if (cit.type === 'website') {
+                            const urlStr = cit.url ? ` [Online]. Available: ${cit.url}` : '';
+                            return `${authorStr}, "${title}"${urlStr}.`;
+                        }
+                        break;
+                    }
+                }
+                return `${last}, ${first}. *${title}*.`;
+            }
+
+            formatInTextCitation(cit, style) {
+                const last = cit.authorLast || 'Unknown';
+                const year = cit.sourceSpecific?.year || '2026';
+
+                switch(style) {
+                    case 'apa7':
+                    case 'harvard':
+                        return `${last}, ${year}`;
+                    case 'mla9':
+                        return `${last}`;
+                    case 'chicago17':
+                        return `${last} ${year}`;
+                    case 'ieee':
+                        return `1`;
+                    default:
+                        return `${last}, ${year}`;
+                }
+            }
+
+            copyBibliography() {
+                const proj = this.getCurrentProject();
+                if (!proj || proj.citations.length === 0) {
+                    this.showToast('No citations to copy', 'error');
+                    return;
+                }
+
+                const sorted = [...proj.citations].sort((a, b) => (a.authorLast || '').localeCompare(b.authorLast || ''));
+                const text = sorted.map(c => this.formatSingleCitation(c, proj.style).replace(/\*/g, '')).join('\n\n');
+
+                const textArea = document.createElement('textarea');
+                textArea.value = text;
+                document.body.appendChild(textArea);
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    this.showToast('Bibliography copied to clipboard!');
+                } catch (err) {
+                    this.showToast('Failed to copy', 'error');
+                }
+                document.body.removeChild(textArea);
+            }
+
+            copySingleCitation(text) {
+                const cleanText = text.replace(/\*/g, '');
+                const textArea = document.createElement('textarea');
+                textArea.value = cleanText;
+                document.body.appendChild(textArea);
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    this.showToast('Citation copied to clipboard!');
+                } catch (err) {
+                    this.showToast('Failed to copy', 'error');
+                }
+                document.body.removeChild(textArea);
+            }
+
+            exportTxt() {
+                const proj = this.getCurrentProject();
+                if (!proj || proj.citations.length === 0) {
+                    this.showToast('No citations to export', 'error');
+                    return;
+                }
+
+                const sorted = [...proj.citations].sort((a, b) => (a.authorLast || '').localeCompare(b.authorLast || ''));
+                const text = `${proj.title.toUpperCase()}\nBibliography (${this.getStyleDisplayName(proj.style)})\nGenerated by CiteFree\n\n` +
+                    sorted.map(c => this.formatSingleCitation(c, proj.style).replace(/\*/g, '')).join('\n\n');
+
+                const blob = new Blob([text], { type: 'text/plain;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${proj.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_bibliography.txt`;
+                a.click();
+                URL.revokeObjectURL(url);
+                this.showToast('Bibliography exported as .txt!');
+            }
+
+            exportBibTeX() {
+                const proj = this.getCurrentProject();
+                if (!proj || proj.citations.length === 0) {
+                    this.showToast('No citations to export', 'error');
+                    return;
+                }
+
+                let bibtex = `% BibTeX Export generated by CiteFree\n\n`;
+                proj.citations.forEach((c, idx) => {
+                    const key = `${(c.authorLast || 'author').toLowerCase()}${c.sourceSpecific?.year || '2026'}`;
+                    const type = c.type === 'book' ? 'book' : c.type === 'journal' ? 'article' : 'misc';
+                    bibtex += `@${type}{${key}${idx},\n`;
+                    bibtex += `  author = {${c.authorLast || ''}, ${c.authorFirst || ''}},\n`;
+                    bibtex += `  title = {${c.title || ''}},\n`;
+                    if (c.sourceSpecific?.year) bibtex += `  year = {${c.sourceSpecific.year}},\n`;
+                    if (c.sourceSpecific?.publisher) bibtex += `  publisher = {${c.sourceSpecific.publisher}},\n`;
+                    if (c.sourceSpecific?.journalName) bibtex += `  journal = {${c.sourceSpecific.journalName}},\n`;
+                    if (c.url) bibtex += `  url = {${c.url}},\n`;
+                    bibtex += `}\n\n`;
+                });
+
+                const blob = new Blob([bibtex], { type: 'text/plain;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${proj.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.bib`;
+                a.click();
+                URL.revokeObjectURL(url);
+                this.showToast('Exported successfully as .BibTeX!');
+            }
+
+            toggleHelpModal() {
+                const modal = document.getElementById('modal-help');
+                if (modal.classList.contains('hidden')) {
+                    modal.classList.remove('hidden');
+                    modal.classList.add('flex');
+                } else {
+                    modal.classList.remove('flex');
+                    modal.classList.add('hidden');
+                }
+            }
+
+            escapeHtml(str) {
+                return String(str)
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, '&#039;');
+            }
+
+            escapeQuotes(str) {
+                return str.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+            }
+        }
+
+        // Initialize application instance
+        const app = new CiteFreeApp();
+    </script>
+</body>
+</html>
