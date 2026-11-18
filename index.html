@@ -31,6 +31,10 @@
             }
         }
     </script>
+    <!-- Firebase (cloud sync: Google sign-in + Firestore) -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
     <style>
         /* Custom smooth scrolling & Siri/Apple Intelligence inspired Aesthetics */
         html {
@@ -185,6 +189,10 @@
                         </button>
                     </div>
                 </div>
+
+                <button id="auth-btn" onclick="app.toggleAuth()" class="inline-flex items-center gap-2 px-4 py-2 rounded-2xl border border-slate-200 dark:border-zinc-700 text-slate-700 dark:text-slate-200 text-xs font-bold elastic-stretch" title="Sign in to sync across devices">
+                    <i class="fa-solid fa-cloud"></i> <span id="auth-label" class="max-w-[12rem] truncate">Sign in</span>
+                </button>
 
                 <button onclick="app.openProjectModal()" class="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold shadow-md shadow-brand-500/25 elastic-stretch">
                     <i class="fa-solid fa-plus"></i> New Project
@@ -507,6 +515,24 @@
         // Fallback year for missing metadata (was hardcoded to 2026)
         const DEFAULT_YEAR = String(new Date().getFullYear());
 
+        // ===== CLOUD SYNC SETUP =====
+        // Paste your Firebase web app config here (Firebase console > Project settings > Your apps).
+        // Leave as null to run locally only (localStorage).
+        const FIREBASE_CONFIG = {
+            apiKey: "AIzaSyDg8yuLFRZdoAvBVmRiy-iW4yYGeeFFKO4",
+            authDomain: "easymadebib.firebaseapp.com",
+            projectId: "easymadebib",
+            storageBucket: "easymadebib.firebasestorage.app",
+            messagingSenderId: "458624142424",
+            appId: "1:458624142424:web:ccd1924fddf7d185cd0e2d",
+            measurementId: "G-X8QB8TR610"
+        };
+        // Example:
+        // const FIREBASE_CONFIG = {
+        //     apiKey: "...", authDomain: "your-project.firebaseapp.com",
+        //     projectId: "your-project", appId: "..."
+        // };
+
         class CiteFreeApp {
             constructor() {
                 this.projects = [];
@@ -535,7 +561,102 @@
                     }
                 });
 
+                this.user = null;
+                this.db = null;
+                this.auth = null;
+                this.initCloud();
+
                 this.init();
+            }
+
+            /* --- Cloud sync (Firebase Auth + Firestore) --- */
+            initCloud() {
+                if (!FIREBASE_CONFIG || typeof firebase === 'undefined') return;
+                this.renderAuthButton('checking');
+                try {
+                    if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
+                    this.auth = firebase.auth();
+                    this.db = firebase.firestore();
+                    this.auth.onAuthStateChanged(user => this.onUserChanged(user));
+                } catch (err) {
+                    console.error(err);
+                    this.showToast('Cloud sync unavailable', 'error');
+                }
+            }
+
+            // state: 'checking' | 'out' | 'busy' | 'in' (email shown when signed in)
+            renderAuthButton(state) {
+                const btn = document.getElementById('auth-btn');
+                const label = document.getElementById('auth-label');
+                if (!btn || !label) return;
+                btn.disabled = state === 'checking' || state === 'busy';
+                if (state === 'in' && this.user) {
+                    label.textContent = this.user.email || this.user.displayName || 'Signed in';
+                    btn.title = 'Signed in as ' + label.textContent + ' (click to sign out)';
+                } else if (state === 'busy') {
+                    label.textContent = 'Signing in...';
+                    btn.title = 'Waiting for Google sign-in';
+                } else if (state === 'checking') {
+                    label.textContent = 'Checking...';
+                    btn.title = 'Checking sign-in status';
+                } else {
+                    label.textContent = 'Sign in';
+                    btn.title = 'Sign in to sync across devices';
+                }
+            }
+
+            async toggleAuth() {
+                if (!this.auth) {
+                    this.showToast('Cloud sync is not configured yet', 'error');
+                    return;
+                }
+                if (this.user) {
+                    const email = this.user.email || 'this account';
+                    if (confirm('Signed in as ' + email + '.\n\nSign out?')) {
+                        await this.auth.signOut();
+                    }
+                    return;
+                }
+                this.renderAuthButton('busy');
+                try {
+                    await this.auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
+                } catch (err) {
+                    // User closed the popup: not an error
+                    if (err.code !== 'auth/popup-closed-by-user' && err.code !== 'auth/cancelled-popup-request') {
+                        this.showToast('Sign-in failed: ' + err.message, 'error');
+                    }
+                } finally {
+                    this.renderAuthButton(this.user ? 'in' : 'out');
+                }
+            }
+
+            async onUserChanged(user) {
+                this.user = user;
+                this.renderAuthButton(user ? 'in' : 'out');
+                if (!user) return;
+
+                try {
+                    const ref = this.db.collection('users').doc(user.uid);
+                    const snap = await ref.get();
+                    if (snap.exists && Array.isArray(snap.data().projects)) {
+                        // Cloud copy wins on sign-in
+                        this.projects = snap.data().projects;
+                        localStorage.setItem('citefree_projects', JSON.stringify(this.projects));
+                    } else {
+                        // First sign-in: upload what is local now
+                        await ref.set({ projects: this.projects });
+                    }
+                    this.showToast('Synced with cloud');
+                } catch (err) {
+                    console.error(err);
+                    this.showToast('Cloud load failed, using local data', 'error');
+                }
+
+                if (this.currentView === 'workspace') {
+                    this.renderWorkspace();
+                } else {
+                    this.renderDashboard();
+                }
             }
 
             init() {
@@ -596,6 +717,14 @@
 
             saveProjects() {
                 localStorage.setItem('citefree_projects', JSON.stringify(this.projects));
+                if (this.user && this.db) {
+                    this.db.collection('users').doc(this.user.uid)
+                        .set({ projects: this.projects, updatedAt: firebase.firestore.FieldValue.serverTimestamp() })
+                        .catch(err => {
+                            console.error(err);
+                            this.showToast('Cloud save failed (saved locally)', 'error');
+                        });
+                }
             }
 
             showToast(message, type = 'success') {
