@@ -1282,7 +1282,9 @@
                         const info = urlData.data;
                         this.setSourceType('website');
 
-                        // Author
+                        const siteName = info.publisher || new URL(targetUrl).hostname.replace('www.', '');
+
+                        // Author (organisation pages: publisher is the author)
                         if (info.author) {
                             const names = info.author.split(' ');
                             document.getElementById('cit-author-last').value = names.pop() || '';
@@ -1292,9 +1294,16 @@
                             document.getElementById('cit-author-first').value = '';
                         }
 
-                        document.getElementById('cit-title').value = info.title || '';
+                        // Title: remove the " - Site Name" suffix pages add to <title>
+                        let pageTitle = (info.title || '').trim();
+                        if (siteName) {
+                            const escaped = siteName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                            pageTitle = pageTitle.replace(new RegExp('\\s*[-|:\u2013\u2014]\\s*' + escaped + '\\s*$', 'i'), '');
+                        }
+                        document.getElementById('cit-title').value = pageTitle;
                         document.getElementById('cit-url').value = info.url || targetUrl;
-                        document.getElementById('spec-siteName').value = info.publisher || new URL(targetUrl).hostname.replace('www.', '');
+                        // Site name is omitted when it repeats the author (APA 7)
+                        document.getElementById('spec-siteName').value = info.author ? siteName : '';
 
                         if (info.date) {
                             const yearMatch = info.date.match(/\d{4}/);
@@ -1395,15 +1404,18 @@
 
                 switch(style) {
                     case 'apa7': {
-                        const authorStr = first ? `${last}, ${first.charAt(0)}.` : last;
+                        const rawAuthor = first ? `${last}, ${first.charAt(0)}.` : last;
+                        // APA 7: author is always followed by a period, e.g. "NASA. (2025)."
+                        const authorStr = rawAuthor.endsWith('.') ? rawAuthor : rawAuthor + '.';
                         const year = s.year || DEFAULT_YEAR;
                         if (cit.type === 'book') {
                             const pub = s.publisher || 'Publisher';
                             return `${authorStr} (${year}). *${title}*. ${pub}.`;
                         } else if (cit.type === 'website') {
-                            const site = s.siteName || 'Website';
+                            // Site name is omitted when empty (e.g. it repeats the author)
+                            const siteStr = s.siteName ? ` ${s.siteName}.` : '';
                             const urlStr = cit.url ? ` ${cit.url}` : '';
-                            return `${authorStr} (${year}). *${title}*. ${site}.${urlStr}`;
+                            return `${authorStr} (${year}). *${title}*.${siteStr}${urlStr}`;
                         } else if (cit.type === 'journal') {
                             const jName = s.journalName || 'Journal';
                             const vol = s.volume ? ` ${s.volume}` : '';
