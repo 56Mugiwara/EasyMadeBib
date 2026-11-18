@@ -504,6 +504,9 @@
 
     <!-- Main JavaScript Logic -->
     <script>
+        // Fallback year for missing metadata (was hardcoded to 2026)
+        const DEFAULT_YEAR = String(new Date().getFullYear());
+
         class CiteFreeApp {
             constructor() {
                 this.projects = [];
@@ -536,7 +539,7 @@
             }
 
             init() {
-                this.applyTheme(this.theme);
+                this.applyTheme(this.theme, true);
                 this.renderDashboard();
             }
 
@@ -570,7 +573,7 @@
                 if (dd) dd.classList.add('hidden');
             }
 
-            applyTheme(mode) {
+            applyTheme(mode, silent = false) {
                 const htmlEl = document.documentElement;
                 const icon = document.getElementById('theme-btn-icon');
 
@@ -580,14 +583,14 @@
                 if (mode === 'dark') {
                     htmlEl.classList.add('dark');
                     if (icon) icon.className = 'fa-solid fa-moon text-indigo-400 text-sm';
-                    this.showToast('Dark Mode Enabled');
+                    if (!silent) this.showToast('Dark Mode Enabled');
                 } else if (mode === 'trueblack') {
                     htmlEl.classList.add('dark', 'trueblack');
                     if (icon) icon.className = 'fa-solid fa-moon text-slate-100 text-sm';
-                    this.showToast('True Black OLED Enabled');
+                    if (!silent) this.showToast('True Black OLED Enabled');
                 } else {
                     if (icon) icon.className = 'fa-solid fa-sun text-amber-500 text-sm';
-                    this.showToast('Light Mode Enabled');
+                    if (!silent) this.showToast('Light Mode Enabled');
                 }
             }
 
@@ -884,9 +887,10 @@
                     const row = document.createElement('div');
                     row.className = 'group relative pl-9 -indent-9 hover:bg-slate-50 p-2 rounded-xl transition-smooth border border-transparent hover:border-slate-100';
 
-                    const formattedString = this.formatSingleCitation(cit, proj.style);
-                    const htmlFormatted = formattedString.replace(/\*(.*?)\*/g, '<em>$1</em>');
-                    const inText = this.formatInTextCitation(cit, proj.style);
+                    // Escape user data first, then convert the *italic* markers to <em>
+                    const htmlFormatted = this.escapeHtml(this.formatSingleCitation(cit, proj.style))
+                        .replace(/\*(.*?)\*/g, '<em>$1</em>');
+                    const inText = this.escapeHtml(this.formatInTextCitation(cit, proj.style));
 
                     row.innerHTML = `
                         <div class="inline-block text-slate-900 leading-relaxed font-serif">
@@ -894,7 +898,7 @@
                         </div>
                         <div class="opacity-0 group-hover:opacity-100 transition-smooth absolute right-2 top-2 flex items-center gap-1.5 bg-white/95 backdrop-blur border border-slate-200 px-2.5 py-1 rounded-xl shadow-sm indent-0 font-sans text-xs">
                             <span class="text-[10px] font-bold text-brand-600 mr-1">In-text: (${inText})</span>
-                            <button onclick="app.copySingleCitation('${this.escapeQuotes(formattedString)}')" class="hover:text-brand-600 text-slate-500 p-1" title="Copy Citation">
+                            <button onclick="app.copySingleCitation('${cit.id}')" class="hover:text-brand-600 text-slate-500 p-1" title="Copy Citation">
                                 <i class="fa-solid fa-copy"></i>
                             </button>
                             <button onclick="app.openCitationModal('${cit.id}')" class="hover:text-brand-600 text-slate-500 p-1" title="Edit Citation">
@@ -941,7 +945,11 @@
                 this.renderSourceSpecificFields(type);
             }
 
-            renderSourceSpecificFields(type, data = {}) {
+            renderSourceSpecificFields(type, rawData = {}) {
+                // Escape stored values: they are interpolated into value="..." attributes
+                const data = Object.fromEntries(
+                    Object.entries(rawData).map(([k, v]) => [k, this.escapeHtml(v ?? '')])
+                );
                 const container = document.getElementById('source-specific-fields');
                 let html = '';
 
@@ -1060,7 +1068,8 @@
 
                 try {
                     // 1. DYNAMIC DOI RESOLUTION (Crossref REST API)
-                    if (cleanQuery.includes('10.') || cleanQuery.startsWith('doi:') || cleanQuery.includes('doi.org/')) {
+                    // Match a real DOI pattern (10.NNNN/...), not any "10." substring such as bbc10.co.uk
+                    if (/10\.\d{4,9}\//.test(cleanQuery) || cleanQuery.startsWith('doi:') || cleanQuery.includes('doi.org/')) {
                         let doiStr = cleanQuery;
                         if (cleanQuery.includes('doi.org/')) {
                             doiStr = cleanQuery.split('doi.org/')[1];
@@ -1150,7 +1159,7 @@
                             document.getElementById('cit-author-last').value = names.pop() || '';
                             document.getElementById('cit-author-first').value = names.join(' ') || '';
                         } else {
-                            document.getElementById('cit-author-last').value = info.publisher || info.publisher || '';
+                            document.getElementById('cit-author-last').value = info.publisher || '';
                             document.getElementById('cit-author-first').value = '';
                         }
 
@@ -1191,10 +1200,10 @@
                 const sourceSpecific = {};
                 if (this.currentSourceType === 'website') {
                     sourceSpecific.siteName = document.getElementById('spec-siteName')?.value.trim() || '';
-                    sourceSpecific.year = document.getElementById('spec-year')?.value.trim() || '2026';
+                    sourceSpecific.year = document.getElementById('spec-year')?.value.trim() || DEFAULT_YEAR;
                 } else if (this.currentSourceType === 'book') {
                     sourceSpecific.publisher = document.getElementById('spec-publisher')?.value.trim() || '';
-                    sourceSpecific.year = document.getElementById('spec-year')?.value.trim() || '2026';
+                    sourceSpecific.year = document.getElementById('spec-year')?.value.trim() || DEFAULT_YEAR;
                 } else if (this.currentSourceType === 'journal') {
                     sourceSpecific.journalName = document.getElementById('spec-journalName')?.value.trim() || '';
                     sourceSpecific.volume = document.getElementById('spec-volume')?.value.trim() || '';
@@ -1202,10 +1211,10 @@
                     sourceSpecific.pages = document.getElementById('spec-pages')?.value.trim() || '';
                 } else if (this.currentSourceType === 'video') {
                     sourceSpecific.platform = document.getElementById('spec-platform')?.value.trim() || '';
-                    sourceSpecific.year = document.getElementById('spec-year')?.value.trim() || '2026';
+                    sourceSpecific.year = document.getElementById('spec-year')?.value.trim() || DEFAULT_YEAR;
                 } else if (this.currentSourceType === 'newspaper') {
                     sourceSpecific.newsName = document.getElementById('spec-newsName')?.value.trim() || '';
-                    sourceSpecific.date = document.getElementById('spec-date')?.value.trim() || '2026';
+                    sourceSpecific.date = document.getElementById('spec-date')?.value.trim() || DEFAULT_YEAR;
                 }
 
                 if (this.editingCitationId) {
@@ -1258,7 +1267,7 @@
                 switch(style) {
                     case 'apa7': {
                         const authorStr = first ? `${last}, ${first.charAt(0)}.` : last;
-                        const year = s.year || '2026';
+                        const year = s.year || DEFAULT_YEAR;
                         if (cit.type === 'book') {
                             const pub = s.publisher || 'Publisher';
                             return `${authorStr} (${year}). *${title}*. ${pub}.`;
@@ -1277,7 +1286,7 @@
                             return `${authorStr} (${year}). *${title}* [Video]. ${platform}.`;
                         } else if (cit.type === 'newspaper') {
                             const news = s.newsName || 'Newspaper';
-                            const date = s.date || '2026';
+                            const date = s.date || DEFAULT_YEAR;
                             return `${authorStr} (${date}). ${title}. *${news}*.`;
                         }
                         break;
@@ -1286,27 +1295,29 @@
                         const authorStr = first ? `${last}, ${first}.` : `${last}.`;
                         if (cit.type === 'book') {
                             const pub = s.publisher || 'Publisher';
-                            const year = s.year || '2026';
+                            const year = s.year || DEFAULT_YEAR;
                             return `${authorStr} *${title}*. ${pub}, ${year}.`;
                         } else if (cit.type === 'website') {
                             const site = s.siteName || 'Website';
-                            const year = s.year || '2026';
+                            const year = s.year || DEFAULT_YEAR;
                             const urlStr = cit.url ? ` ${cit.url}.` : '';
                             return `${authorStr} "${title}." *${site}*, ${year},${urlStr}`;
                         } else if (cit.type === 'journal') {
                             const jName = s.journalName || 'Journal';
-                            const vol = s.volume ? `vol. ${s.volume}, ` : '';
-                            const iss = s.issue ? `no. ${s.issue}, ` : '';
-                            const year = s.year || '2026';
-                            const pages = s.pages ? `pp. ${s.pages}.` : '';
-                            return `${authorStr} "${title}." *${jName}*, ${vol}${iss}${year}, ${pages}`;
+                            const details = [
+                                s.volume ? `vol. ${s.volume}` : '',
+                                s.issue ? `no. ${s.issue}` : '',
+                                s.year || DEFAULT_YEAR,
+                                s.pages ? `pp. ${s.pages}` : ''
+                            ].filter(Boolean).join(', ');
+                            return `${authorStr} "${title}." *${jName}*, ${details}.`;
                         } else if (cit.type === 'video') {
                             const platform = s.platform || 'YouTube';
-                            const year = s.year || '2026';
+                            const year = s.year || DEFAULT_YEAR;
                             return `${authorStr} "${title}." *${platform}*, ${year}.`;
                         } else if (cit.type === 'newspaper') {
                             const news = s.newsName || 'Newspaper';
-                            const date = s.date || '2026';
+                            const date = s.date || DEFAULT_YEAR;
                             return `${authorStr} "${title}." *${news}*, ${date}.`;
                         }
                         break;
@@ -1315,16 +1326,16 @@
                         const authorStr = first ? `${last}, ${first}.` : `${last}.`;
                         if (cit.type === 'book') {
                             const pub = s.publisher || 'Publisher';
-                            const year = s.year || '2026';
+                            const year = s.year || DEFAULT_YEAR;
                             return `${authorStr} *${title}*. ${pub}, ${year}.`;
                         } else if (cit.type === 'website') {
                             const site = s.siteName || 'Website';
                             const urlStr = cit.url ? ` ${cit.url}.` : '';
-                            return `${authorStr} "${title}." *${site}*. Accessed 2026.${urlStr}`;
+                            return `${authorStr} "${title}." *${site}*. Accessed ${DEFAULT_YEAR}.${urlStr}`;
                         } else if (cit.type === 'journal') {
                             const jName = s.journalName || 'Journal';
                             const vol = s.volume || '';
-                            const year = s.year || '2026';
+                            const year = s.year || DEFAULT_YEAR;
                             const pages = s.pages ? `: ${s.pages}` : '';
                             return `${authorStr} "${title}." *${jName}* ${vol} (${year})${pages}.`;
                         }
@@ -1332,7 +1343,7 @@
                     }
                     case 'harvard': {
                         const authorStr = first ? `${last}, ${first.charAt(0)}.` : last;
-                        const year = s.year || '2026';
+                        const year = s.year || DEFAULT_YEAR;
                         if (cit.type === 'book') {
                             const pub = s.publisher || 'Publisher';
                             return `${authorStr} (${year}) *${title}*. ${pub}.`;
@@ -1347,7 +1358,7 @@
                         const authorStr = first ? `${first.charAt(0)}. ${last}` : last;
                         if (cit.type === 'book') {
                             const pub = s.publisher || 'Publisher';
-                            const year = s.year || '2026';
+                            const year = s.year || DEFAULT_YEAR;
                             return `${authorStr}, *${title}*. ${pub}, ${year}.`;
                         } else if (cit.type === 'website') {
                             const urlStr = cit.url ? ` [Online]. Available: ${cit.url}` : '';
@@ -1356,12 +1367,13 @@
                         break;
                     }
                 }
-                return `${last}, ${first}. *${title}*.`;
+                const name = first ? `${last}, ${first}.` : `${last}.`;
+                return `${name} *${title}*.`;
             }
 
             formatInTextCitation(cit, style) {
                 const last = cit.authorLast || 'Unknown';
-                const year = cit.sourceSpecific?.year || '2026';
+                const year = cit.sourceSpecific?.year || DEFAULT_YEAR;
 
                 switch(style) {
                     case 'apa7':
@@ -1401,8 +1413,11 @@
                 document.body.removeChild(textArea);
             }
 
-            copySingleCitation(text) {
-                const cleanText = text.replace(/\*/g, '');
+            copySingleCitation(citId) {
+                const proj = this.getCurrentProject();
+                const cit = proj?.citations.find(c => c.id === citId);
+                if (!cit) return;
+                const cleanText = this.formatSingleCitation(cit, proj.style).replace(/\*/g, '');
                 const textArea = document.createElement('textarea');
                 textArea.value = cleanText;
                 document.body.appendChild(textArea);
@@ -1446,7 +1461,7 @@
 
                 let bibtex = `% BibTeX Export generated by CiteFree\n\n`;
                 proj.citations.forEach((c, idx) => {
-                    const key = `${(c.authorLast || 'author').toLowerCase()}${c.sourceSpecific?.year || '2026'}`;
+                    const key = `${(c.authorLast || 'author').toLowerCase()}${c.sourceSpecific?.year || DEFAULT_YEAR}`;
                     const type = c.type === 'book' ? 'book' : c.type === 'journal' ? 'article' : 'misc';
                     bibtex += `@${type}{${key}${idx},\n`;
                     bibtex += `  author = {${c.authorLast || ''}, ${c.authorFirst || ''}},\n`;
@@ -1486,10 +1501,6 @@
                     .replace(/>/g, '&gt;')
                     .replace(/"/g, '&quot;')
                     .replace(/'/g, '&#039;');
-            }
-
-            escapeQuotes(str) {
-                return str.replace(/'/g, "\\'").replace(/"/g, '&quot;');
             }
         }
 
