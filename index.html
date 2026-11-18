@@ -191,7 +191,7 @@
                 </div>
 
                 <button id="auth-btn" onclick="app.toggleAuth()" class="inline-flex items-center gap-2 px-4 py-2 rounded-2xl border border-slate-200 dark:border-zinc-700 text-slate-700 dark:text-slate-200 text-xs font-bold elastic-stretch" title="Sign in to sync across devices">
-                    <i class="fa-solid fa-cloud"></i> <span id="auth-label">Sign in</span>
+                    <i class="fa-solid fa-cloud"></i> <span id="auth-label" class="max-w-[12rem] truncate">Sign in</span>
                 </button>
 
                 <button onclick="app.openProjectModal()" class="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold shadow-md shadow-brand-500/25 elastic-stretch">
@@ -572,6 +572,7 @@
             /* --- Cloud sync (Firebase Auth + Firestore) --- */
             initCloud() {
                 if (!FIREBASE_CONFIG || typeof firebase === 'undefined') return;
+                this.renderAuthButton('checking');
                 try {
                     if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
                     this.auth = firebase.auth();
@@ -583,22 +584,55 @@
                 }
             }
 
-            toggleAuth() {
+            // state: 'checking' | 'out' | 'busy' | 'in' (email shown when signed in)
+            renderAuthButton(state) {
+                const btn = document.getElementById('auth-btn');
+                const label = document.getElementById('auth-label');
+                if (!btn || !label) return;
+                btn.disabled = state === 'checking' || state === 'busy';
+                if (state === 'in' && this.user) {
+                    label.textContent = this.user.email || this.user.displayName || 'Signed in';
+                    btn.title = 'Signed in as ' + label.textContent + ' (click to sign out)';
+                } else if (state === 'busy') {
+                    label.textContent = 'Signing in...';
+                    btn.title = 'Waiting for Google sign-in';
+                } else if (state === 'checking') {
+                    label.textContent = 'Checking...';
+                    btn.title = 'Checking sign-in status';
+                } else {
+                    label.textContent = 'Sign in';
+                    btn.title = 'Sign in to sync across devices';
+                }
+            }
+
+            async toggleAuth() {
                 if (!this.auth) {
                     this.showToast('Cloud sync is not configured yet', 'error');
                     return;
                 }
                 if (this.user) {
-                    this.auth.signOut();
-                } else {
-                    this.auth.signInWithPopup(new firebase.auth.GoogleAuthProvider())
-                        .catch(err => this.showToast('Sign-in failed: ' + err.message, 'error'));
+                    const email = this.user.email || 'this account';
+                    if (confirm('Signed in as ' + email + '.\n\nSign out?')) {
+                        await this.auth.signOut();
+                    }
+                    return;
+                }
+                this.renderAuthButton('busy');
+                try {
+                    await this.auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
+                } catch (err) {
+                    // User closed the popup: not an error
+                    if (err.code !== 'auth/popup-closed-by-user' && err.code !== 'auth/cancelled-popup-request') {
+                        this.showToast('Sign-in failed: ' + err.message, 'error');
+                    }
+                } finally {
+                    this.renderAuthButton(this.user ? 'in' : 'out');
                 }
             }
 
             async onUserChanged(user) {
                 this.user = user;
-                document.getElementById('auth-label').textContent = user ? 'Signed in' : 'Sign in';
+                this.renderAuthButton(user ? 'in' : 'out');
                 if (!user) return;
 
                 try {
