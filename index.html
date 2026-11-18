@@ -31,6 +31,10 @@
             }
         }
     </script>
+    <!-- Firebase (cloud sync: Google sign-in + Firestore) -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
     <style>
         /* Custom smooth scrolling & Siri/Apple Intelligence inspired Aesthetics */
         html {
@@ -185,6 +189,10 @@
                         </button>
                     </div>
                 </div>
+
+                <button id="auth-btn" onclick="app.toggleAuth()" class="inline-flex items-center gap-2 px-4 py-2 rounded-2xl border border-slate-200 dark:border-zinc-700 text-slate-700 dark:text-slate-200 text-xs font-bold elastic-stretch" title="Sign in to sync across devices">
+                    <i class="fa-solid fa-cloud"></i> <span id="auth-label">Sign in</span>
+                </button>
 
                 <button onclick="app.openProjectModal()" class="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold shadow-md shadow-brand-500/25 elastic-stretch">
                     <i class="fa-solid fa-plus"></i> New Project
@@ -507,6 +515,16 @@
         // Fallback year for missing metadata (was hardcoded to 2026)
         const DEFAULT_YEAR = String(new Date().getFullYear());
 
+        // ===== CLOUD SYNC SETUP =====
+        // Paste your Firebase web app config here (Firebase console > Project settings > Your apps).
+        // Leave as null to run locally only (localStorage).
+        const FIREBASE_CONFIG = null;
+        // Example:
+        // const FIREBASE_CONFIG = {
+        //     apiKey: "...", authDomain: "your-project.firebaseapp.com",
+        //     projectId: "your-project", appId: "..."
+        // };
+
         class CiteFreeApp {
             constructor() {
                 this.projects = [];
@@ -535,7 +553,68 @@
                     }
                 });
 
+                this.user = null;
+                this.db = null;
+                this.auth = null;
+                this.initCloud();
+
                 this.init();
+            }
+
+            /* --- Cloud sync (Firebase Auth + Firestore) --- */
+            initCloud() {
+                if (!FIREBASE_CONFIG || typeof firebase === 'undefined') return;
+                try {
+                    if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
+                    this.auth = firebase.auth();
+                    this.db = firebase.firestore();
+                    this.auth.onAuthStateChanged(user => this.onUserChanged(user));
+                } catch (err) {
+                    console.error(err);
+                    this.showToast('Cloud sync unavailable', 'error');
+                }
+            }
+
+            toggleAuth() {
+                if (!this.auth) {
+                    this.showToast('Cloud sync is not configured yet', 'error');
+                    return;
+                }
+                if (this.user) {
+                    this.auth.signOut();
+                } else {
+                    this.auth.signInWithPopup(new firebase.auth.GoogleAuthProvider())
+                        .catch(err => this.showToast('Sign-in failed: ' + err.message, 'error'));
+                }
+            }
+
+            async onUserChanged(user) {
+                this.user = user;
+                document.getElementById('auth-label').textContent = user ? 'Signed in' : 'Sign in';
+                if (!user) return;
+
+                try {
+                    const ref = this.db.collection('users').doc(user.uid);
+                    const snap = await ref.get();
+                    if (snap.exists && Array.isArray(snap.data().projects)) {
+                        // Cloud copy wins on sign-in
+                        this.projects = snap.data().projects;
+                        localStorage.setItem('citefree_projects', JSON.stringify(this.projects));
+                    } else {
+                        // First sign-in: upload what is local now
+                        await ref.set({ projects: this.projects });
+                    }
+                    this.showToast('Synced with cloud');
+                } catch (err) {
+                    console.error(err);
+                    this.showToast('Cloud load failed, using local data', 'error');
+                }
+
+                if (this.currentView === 'workspace') {
+                    this.renderWorkspace();
+                } else {
+                    this.renderDashboard();
+                }
             }
 
             init() {
@@ -596,6 +675,14 @@
 
             saveProjects() {
                 localStorage.setItem('citefree_projects', JSON.stringify(this.projects));
+                if (this.user && this.db) {
+                    this.db.collection('users').doc(this.user.uid)
+                        .set({ projects: this.projects, updatedAt: firebase.firestore.FieldValue.serverTimestamp() })
+                        .catch(err => {
+                            console.error(err);
+                            this.showToast('Cloud save failed (saved locally)', 'error');
+                        });
+                }
             }
 
             showToast(message, type = 'success') {
